@@ -1,9 +1,9 @@
-name: Image to MP4
+name: Drive Image to MP4
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 */2 * * *"
+  repository_dispatch:
+    types: [convert_image]
 
 jobs:
   convert:
@@ -15,9 +15,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Download test image (reliable)
+      - name: Download image from Google Drive
         run: |
-          curl -L https://picsum.photos/720/1280 -o image.jpg
+          FILE_ID="${{ github.event.client_payload.file_id }}"
+          echo "Downloading file ID: $FILE_ID"
+          curl -L "https://drive.google.com/uc?export=download&id=$FILE_ID" -o image.jpg
 
       - name: Debug image
         run: |
@@ -34,7 +36,7 @@ jobs:
           file output.mp4
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.3.0
         with:
           name: video
           path: output.mp4
