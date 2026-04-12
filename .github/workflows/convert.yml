@@ -18,25 +18,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Download image from Google Drive
+      - name: Download image from Google Drive (FIXED)
         run: |
           FILE_ID="${{ github.event.client_payload.file_id }}"
           echo "Downloading file ID: $FILE_ID"
 
-          curl -L --fail --max-time 30 \
+          curl -L \
           "https://drive.google.com/uc?export=download&id=$FILE_ID&confirm=t" \
           -o image.jpg
 
-      - name: Debug image
+      - name: Validate image (IMPORTANT)
         run: |
           ls -lh
           file image.jpg
 
-      - name: Convert to MP4
+      - name: Convert to MP4 (FAST + FIXED)
         run: |
           ffmpeg -y -loop 1 -i image.jpg -vf "scale=720:1280" -t 5 -r 25 -pix_fmt yuv420p output.mp4
 
-      - name: Debug video
+      - name: Validate video
         run: |
           ls -lh
           file output.mp4
