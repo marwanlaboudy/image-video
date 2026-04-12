@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Install ffmpeg
         run: |
           sudo apt-get update
@@ -29,7 +32,7 @@ jobs:
           ls -lh
           file image.jpg
 
-      - name: Convert to MP4 (FIXED 🚀)
+      - name: Convert to MP4
         run: |
           ffmpeg -y -loop 1 -i image.jpg -vf "scale=720:1280" -t 5 -r 25 -pix_fmt yuv420p output.mp4
 
@@ -38,8 +41,14 @@ jobs:
           ls -lh
           file output.mp4
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4.3.0
-        with:
-          name: video
-          path: output.mp4
+      - name: Upload video to repo
+        run: |
+          mkdir -p videos
+          cp output.mp4 videos/output.mp4
+
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add videos/output.mp4
+          git commit -m "Update video"
+          git push
