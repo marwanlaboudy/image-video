@@ -18,23 +18,43 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Download image from Google Drive (FIXED)
+      - name: Download image from Google Drive
         run: |
           FILE_ID="${{ github.event.client_payload.file_id }}"
           echo "Downloading file ID: $FILE_ID"
 
-          curl -L \
-          "https://drive.google.com/uc?export=download&id=$FILE_ID&confirm=t" \
-          -o image.jpg
+          wget --quiet --save-cookies cookies.txt --keep-session-cookies \
+          "https://docs.google.com/uc?export=download&id=$FILE_ID" -O- \
+          | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
 
-      - name: Validate image (IMPORTANT)
-        run: |
-          ls -lh
-          file image.jpg
+          wget --load-cookies cookies.txt \
+          "https://docs.google.com/uc?export=download&confirm=$(cat confirm.txt)&id=$FILE_ID" \
+          -O image
 
-      - name: Convert to MP4 (FAST + FIXED)
+          rm -f cookies.txt confirm.txt
+
+      - name: Detect file type
         run: |
-          ffmpeg -y -loop 1 -i image.jpg -vf "scale=720:1280" -t 5 -r 25 -pix_fmt yuv420p output.mp4
+          file image
+
+      - name: Rename correctly (jpg/png)
+        run: |
+          TYPE=$(file image)
+
+          if [[ $TYPE == *"PNG"* ]]; then
+            mv image image.png
+            echo "IMAGE=image.png" >> $GITHUB_ENV
+          elif [[ $TYPE == *"JPEG"* ]]; then
+            mv image image.jpg
+            echo "IMAGE=image.jpg" >> $GITHUB_ENV
+          else
+            echo "Unknown file type"
+            exit 1
+          fi
+
+      - name: Convert to MP4
+        run: |
+          ffmpeg -y -loop 1 -i $IMAGE -vf "scale=720:1280" -t 5 -r 25 -pix_fmt yuv420p output.mp4
 
       - name: Validate video
         run: |
