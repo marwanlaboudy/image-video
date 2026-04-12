@@ -19,16 +19,19 @@ jobs:
         run: |
           FILE_ID="${{ github.event.client_payload.file_id }}"
           echo "Downloading file ID: $FILE_ID"
-          curl -L "https://drive.google.com/uc?export=download&id=$FILE_ID" -o image.jpg
+
+          curl -L --fail --max-time 30 \
+          "https://drive.google.com/uc?export=download&id=$FILE_ID&confirm=t" \
+          -o image.jpg
 
       - name: Debug image
         run: |
           ls -lh
           file image.jpg
 
-      - name: Convert to MP4
+      - name: Convert to MP4 (FIXED 🚀)
         run: |
-          ffmpeg -y -loop 1 -i image.jpg -t 5 -pix_fmt yuv420p output.mp4
+          ffmpeg -y -loop 1 -i image.jpg -vf "scale=720:1280" -t 5 -r 25 -pix_fmt yuv420p output.mp4
 
       - name: Debug video
         run: |
