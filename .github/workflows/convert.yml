@@ -1,0 +1,26 @@
+name: Image to MP4
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"  # every 2 hours
+  workflow_dispatch:       # allows manual run
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Download image
+        run: wget "https://via.placeholder.com/720x1280.jpg" -O image.jpg
+
+      - name: Convert to MP4
+        run: ffmpeg -loop 1 -i image.jpg -t 5 -pix_fmt yuv420p output.mp4
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: video
+          path: output.mp4
