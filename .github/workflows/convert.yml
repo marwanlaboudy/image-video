@@ -1,9 +1,9 @@
 name: Image to MP4
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "0 */2 * * *"  # every 2 hours
-  workflow_dispatch:       # allows manual run
+    - cron: "0 */2 * * *"
 
 jobs:
   convert:
@@ -11,13 +11,27 @@ jobs:
 
     steps:
       - name: Install ffmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
-      - name: Download image
-        run: wget "https://via.placeholder.com/720x1280.jpg" -O image.jpg
+      - name: Download test image (reliable)
+        run: |
+          curl -L https://picsum.photos/720/1280 -o image.jpg
+
+      - name: Debug image
+        run: |
+          ls -lh
+          file image.jpg
 
       - name: Convert to MP4
-        run: ffmpeg -loop 1 -i image.jpg -t 5 -pix_fmt yuv420p output.mp4
+        run: |
+          ffmpeg -y -loop 1 -i image.jpg -t 5 -pix_fmt yuv420p output.mp4
+
+      - name: Debug video
+        run: |
+          ls -lh
+          file output.mp4
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
